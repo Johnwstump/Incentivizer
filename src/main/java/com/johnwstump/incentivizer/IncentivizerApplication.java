@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 
 import javax.sql.DataSource;
-import java.beans.PropertyVetoException;
 import java.util.logging.Logger;
 
 @SpringBootApplication
