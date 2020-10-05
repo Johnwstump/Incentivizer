@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.swing.*;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -53,5 +54,16 @@ public class UserController {
     @DeleteMapping("/{userId}")
     public void deleteUser(@PathVariable Long userId){
         userService.deleteById(userId);
+    }
+
+    @PutMapping("/{userId}")
+    public void updateUser(@PathVariable Long userId, @RequestBody User user){
+        if (userService.findById(userId).isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+
+        user.setId(userId);
+
+        userService.save(user);
     }
 }
