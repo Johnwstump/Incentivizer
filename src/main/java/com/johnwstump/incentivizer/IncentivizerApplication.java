@@ -27,13 +27,6 @@ public class IncentivizerApplication {
     public DataSource securityDataSource() {
         ComboPooledDataSource securityDataSource = new ComboPooledDataSource();
 
-        try {
-            securityDataSource.setDriverClass(env.getProperty("jdbc.driver"));
-        }
-        catch (PropertyVetoException ex) {
-            throw new RuntimeException(ex);
-        }
-
         securityDataSource.setJdbcUrl(env.getProperty("jdbc.url"));
         securityDataSource.setUser(env.getProperty("jdbc.user"));
         securityDataSource.setPassword(env.getProperty("jdbc.password"));
