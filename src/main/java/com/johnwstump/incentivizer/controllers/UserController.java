@@ -1,7 +1,7 @@
 package com.johnwstump.incentivizer.controllers;
 
 import com.johnwstump.incentivizer.model.User;
-import com.johnwstump.incentivizer.services.IUser;
+import com.johnwstump.incentivizer.services.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import javax.swing.*;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -18,8 +17,12 @@ import java.util.Optional;
 @RequestMapping("/users")
 public class UserController {
 
+    private IUserService userService;
+
     @Autowired
-    IUser userService;
+    public UserController (IUserService userService){
+        this.userService = userService;
+    }
 
     @GetMapping("/")
     public List<User> getUsers() {
@@ -30,7 +33,7 @@ public class UserController {
     public User getUser(@PathVariable Long userId) {
         Optional<User> retrievedUser = userService.findById(userId);
 
-        if (!retrievedUser.isPresent()){
+        if (retrievedUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
 

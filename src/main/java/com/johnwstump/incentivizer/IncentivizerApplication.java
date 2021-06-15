@@ -13,13 +13,18 @@ import java.util.logging.Logger;
 
 @SpringBootApplication
 public class IncentivizerApplication {
-    @Autowired
+
     private Environment env;
 
     private Logger logger = Logger.getLogger(getClass().getName());
 
     public static void main(String[] args) {
         SpringApplication.run(IncentivizerApplication.class, args);
+    }
+
+    @Autowired
+    public IncentivizerApplication(Environment env){
+        this.env = env;
     }
 
     @Bean
