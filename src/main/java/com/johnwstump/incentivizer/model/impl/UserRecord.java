@@ -1,6 +1,7 @@
-package com.johnwstump.incentivizer.model;
+package com.johnwstump.incentivizer.model.impl;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
@@ -8,14 +9,13 @@ import java.util.Calendar;
 
 @Entity
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @Table(name = "user")
-public @Data class User {
+public @Data class UserRecord extends User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-
-    private String name;
-    private String email;
 
     @Basic
     @Temporal(TemporalType.TIMESTAMP)
@@ -25,8 +25,7 @@ public @Data class User {
     @Temporal(TemporalType.TIMESTAMP)
     private Calendar updated;
 
-    public User(String name, String email) {
-        setName(name);
-        setEmail(email);
+    public UserRecord(String name, String email) {
+        super(name, email);
     }
 }

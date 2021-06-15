@@ -1,11 +1,12 @@
 package com.johnwstump.incentivizer.user;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.johnwstump.incentivizer.RESTTests;
-import com.johnwstump.incentivizer.controllers.UserController;
-import com.johnwstump.incentivizer.model.User;
-import com.johnwstump.incentivizer.services.IUser;
+import com.johnwstump.incentivizer.model.IUser;
+import com.johnwstump.incentivizer.model.impl.User;
+import com.johnwstump.incentivizer.rest.UserController;
+import com.johnwstump.incentivizer.model.impl.UserRecord;
+import com.johnwstump.incentivizer.services.IUserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +27,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
@@ -36,64 +38,62 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(value = UserController.class)
 @WithMockUser
-public class UserEndpointTests extends RESTTests {
+class UserEndpointTests extends RESTTests {
+    private static final String PATH_IDENTIFIER = "/users";
+
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
-    private IUser userService;
+    private IUserService userService;
 
-    User mockUser = new User("Norman", "testEmail@test.org");
+    private UserRecord mockUser1 = new UserRecord("Norman", "testEmail@test.org");
+    private UserRecord mockUser2 = new UserRecord("Archie", "anotherEmail@test.org");
 
     /**
      * We ensure that the endpoint returns the correct User specified by the ID indicated in the path.
-     * @throws Exception
      */
     @Test
-    public void testSingleUserGetEndpoint() throws Exception {
-
-        Mockito.when(userService.findById(mockUser.getId())).thenReturn(java.util.Optional.ofNullable(mockUser));
+    void testSingleUserGetEndpoint() throws Exception {
+        // We mock the service behavior to return the mockUser directly
+        Mockito.when(userService.findById(mockUser1.getId())).thenReturn(Optional.ofNullable(mockUser1));
 
         RequestBuilder requestBuilder = MockMvcRequestBuilders.get(
-                "/users/" + mockUser.getId());
+                PATH_IDENTIFIER + "/" + mockUser1.getId());
 
         MvcResult result = mockMvc.perform(requestBuilder).andReturn();
 
         checkResponseCode(result, HttpStatus.OK);
 
-        ObjectMapper mapper = new ObjectMapper();
+        String expectedUser = new ObjectMapper().writeValueAsString(mockUser1);
 
-        String expected = mapper.writeValueAsString(mockUser);
-
-        JSONAssert.assertEquals(expected, result.getResponse()
+        // The resulting JSON should contain the expected user information
+        JSONAssert.assertEquals(expectedUser, result.getResponse()
                 .getContentAsString(), false);
     }
 
     /**
-     * We ensure that the endpoint correctly returns the all Users when called
+     * We ensure that the endpoint correctly returns all Users when called
      * without the ID parameter.
-     * @throws Exception
      */
     @Test
-    public void testAllUsersGetEndpoint() throws Exception {
-
-        List<User> allUsers = new ArrayList<User>();
-        allUsers.add(mockUser);
+    void testAllUsersGetEndpoint() throws Exception {
+        List<UserRecord> allUsers = new ArrayList<>();
+        allUsers.add(mockUser1);
+        allUsers.add(mockUser2);
 
         Mockito.when(userService.getAllUsers()).thenReturn(allUsers);
 
         RequestBuilder requestBuilder = MockMvcRequestBuilders.get(
-                "/users/");
+                PATH_IDENTIFIER + "/");
 
         MvcResult result = mockMvc.perform(requestBuilder).andReturn();
 
         checkResponseCode(result, HttpStatus.OK);
 
-        ObjectMapper mapper = new ObjectMapper();
+        String expectedListOfUsers = new ObjectMapper().writeValueAsString(allUsers);
 
-        String expected = mapper.writeValueAsString(allUsers);
-
-        JSONAssert.assertEquals(expected, result.getResponse()
+        JSONAssert.assertEquals(expectedListOfUsers, result.getResponse()
                 .getContentAsString(), false);
     }
 
@@ -102,16 +102,16 @@ public class UserEndpointTests extends RESTTests {
      * GET location for the created object.
      */
     @Test
-    public void testUserPostEndpoint() throws Exception {
+    void testUserPostEndpoint() throws Exception {
+        Mockito.when(userService.save(Mockito.any(IUser.class))).thenReturn(mockUser1);
 
-        Mockito.when(userService.save(Mockito.any(User.class))).thenReturn(mockUser);
+        // Create a DTO pojo from the mock user
+        User user = new User(mockUser1.getName(), mockUser1.getEmail());
 
-        ObjectMapper mapper = new ObjectMapper();
-
-        String mockUserJson = mapper.writeValueAsString(mockUser);
+        String mockUserJson = new ObjectMapper().writeValueAsString(user);
 
         RequestBuilder requestBuilder = MockMvcRequestBuilders.post(
-                "/users/").accept(MediaType.APPLICATION_JSON).content(mockUserJson)
+                PATH_IDENTIFIER + "/").accept(MediaType.APPLICATION_JSON).content(mockUserJson)
                 .contentType(MediaType.APPLICATION_JSON).with(csrf());
 
         this.mockMvc.perform(requestBuilder);
@@ -120,21 +120,21 @@ public class UserEndpointTests extends RESTTests {
 
         checkResponseCode(result, HttpStatus.CREATED);
 
-        Assertions.assertEquals("http://localhost/users/" + mockUser.getId(), result.getResponse().getHeader(HttpHeaders.LOCATION));
-    }
+        String returnedGetPath = result.getResponse().getHeader(HttpHeaders.LOCATION);
+        String actualGetPath = PATH_IDENTIFIER + "/" + mockUser1.getId();
 
+        Assertions.assertTrue(returnedGetPath != null && returnedGetPath.endsWith(actualGetPath));
+    }
 
     /**
      * We simply want to verify that no errors occur and the result is OK.
      */
     @Test
-    public void testUserDeleteEndpoint() throws Exception {
+    void testUserDeleteEndpoint() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
 
-        String mockUserJson = mapper.writeValueAsString(mockUser);
-
         RequestBuilder requestBuilder = MockMvcRequestBuilders.delete(
-                "/users/" + mockUser.getId()).with(csrf());
+                PATH_IDENTIFIER + "/" + mockUser1.getId()).with(csrf());
 
         this.mockMvc.perform(requestBuilder);
 
@@ -144,7 +144,7 @@ public class UserEndpointTests extends RESTTests {
     }
 
     @Test
-    public void testUserPutEndpoint() throws Exception {
+    void testUserPutEndpoint() throws Exception {
         testUserPutWhenUserDoesNotExist();
         testUserPutWhenUserDoesExist();
     }
@@ -152,17 +152,15 @@ public class UserEndpointTests extends RESTTests {
     /**
      * We want to make sure that the PUT method returns Not Found when the user being updated does not exist,
      * since I want to disallow creation via PUT.
-     * @throws Exception
      */
     private void testUserPutWhenUserDoesNotExist() throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
+        Mockito.when(userService.findById(mockUser1.getId())).thenReturn(java.util.Optional.empty());
+        User user = new User(mockUser1.getName(), mockUser1.getEmail());
 
-        Mockito.when(userService.findById(mockUser.getId())).thenReturn(java.util.Optional.ofNullable(null));
-
-        String mockUserJson = mapper.writeValueAsString(mockUser);
+        String mockUserJson = new ObjectMapper().writeValueAsString(user);
 
         RequestBuilder requestBuilder = MockMvcRequestBuilders.put(
-                "/users/" + mockUser.getId()).accept(MediaType.APPLICATION_JSON).content(mockUserJson)
+                PATH_IDENTIFIER + "/" + mockUser1.getId()).accept(MediaType.APPLICATION_JSON).content(mockUserJson)
                 .contentType(MediaType.APPLICATION_JSON).with(csrf());
 
         this.mockMvc.perform(requestBuilder);
@@ -174,17 +172,15 @@ public class UserEndpointTests extends RESTTests {
 
     /**
      * If the user does exist, we need to verify that the endpoint return OK.
-     * @throws Exception
      */
     private void testUserPutWhenUserDoesExist() throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
+        Mockito.when(userService.findById(mockUser1.getId())).thenReturn(java.util.Optional.ofNullable(mockUser1));
+        User user = new User(mockUser1.getName(), mockUser1.getEmail());
 
-        Mockito.when(userService.findById(mockUser.getId())).thenReturn(java.util.Optional.ofNullable(mockUser));
-
-        String mockUserJson = mapper.writeValueAsString(mockUser);
+        String mockUserJson = new ObjectMapper().writeValueAsString(user);
 
         RequestBuilder requestBuilder = MockMvcRequestBuilders.put(
-                "/users/" + mockUser.getId()).accept(MediaType.APPLICATION_JSON).content(mockUserJson)
+                PATH_IDENTIFIER + "/" + mockUser1.getId()).accept(MediaType.APPLICATION_JSON).content(mockUserJson)
                 .contentType(MediaType.APPLICATION_JSON).with(csrf());
 
         this.mockMvc.perform(requestBuilder);

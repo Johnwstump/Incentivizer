@@ -9,14 +9,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 
 import javax.sql.DataSource;
-import java.util.logging.Logger;
 
 @SpringBootApplication
 public class IncentivizerApplication {
 
     private Environment env;
-
-    private Logger logger = Logger.getLogger(getClass().getName());
 
     public static void main(String[] args) {
         SpringApplication.run(IncentivizerApplication.class, args);

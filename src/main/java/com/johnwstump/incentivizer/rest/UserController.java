@@ -1,6 +1,7 @@
-package com.johnwstump.incentivizer.controllers;
+package com.johnwstump.incentivizer.rest;
 
-import com.johnwstump.incentivizer.model.User;
+import com.johnwstump.incentivizer.model.impl.User;
+import com.johnwstump.incentivizer.model.impl.UserRecord;
 import com.johnwstump.incentivizer.services.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,13 +26,13 @@ public class UserController {
     }
 
     @GetMapping("/")
-    public List<User> getUsers() {
+    public List<UserRecord> getUsers() {
         return userService.getAllUsers();
     }
 
     @GetMapping("/{userId}")
-    public User getUser(@PathVariable Long userId) {
-        Optional<User> retrievedUser = userService.findById(userId);
+    public UserRecord getUser(@PathVariable Long userId) {
+        Optional<UserRecord> retrievedUser = userService.findById(userId);
 
         if (retrievedUser.isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
@@ -41,8 +42,8 @@ public class UserController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<User> addUser(@RequestBody User user) {
-        User addedUser = userService.save(user);
+    public ResponseEntity<UserRecord> addUser(@RequestBody User user) {
+        UserRecord addedUser = userService.save(user);
 
         if (addedUser == null) {
             return ResponseEntity.noContent().build();
@@ -55,18 +56,16 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public void deleteUser(@PathVariable Long userId){
+    public void deleteUser(@PathVariable long userId){
         userService.deleteById(userId);
     }
 
     @PutMapping("/{userId}")
-    public void updateUser(@PathVariable Long userId, @RequestBody User user){
+    public void updateUser(@PathVariable long userId, @RequestBody User user){
         if (userService.findById(userId).isEmpty()){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
 
-        user.setId(userId);
-
-        userService.save(user);
+        userService.save(userId, user);
     }
 }

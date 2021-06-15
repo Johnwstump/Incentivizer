@@ -1,13 +1,15 @@
 package com.johnwstump.incentivizer.services;
 
-import com.johnwstump.incentivizer.model.User;
+import com.johnwstump.incentivizer.model.IUser;
+import com.johnwstump.incentivizer.model.impl.UserRecord;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface IUserService {
-    List<User> getAllUsers();
-    Optional<User> findById(Long id);
-    User save (User user);
-    void deleteById(Long id);
+    List<UserRecord> getAllUsers();
+    Optional<UserRecord> findById(long id);
+    UserRecord save (IUser user);
+    UserRecord save (long id, IUser user);
+    void deleteById(long id);
 }
