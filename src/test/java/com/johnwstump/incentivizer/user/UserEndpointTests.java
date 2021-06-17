@@ -2,12 +2,10 @@ package com.johnwstump.incentivizer.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.johnwstump.incentivizer.RESTTests;
-import com.johnwstump.incentivizer.model.IUser;
-import com.johnwstump.incentivizer.model.impl.User;
+import com.johnwstump.incentivizer.model.user.impl.User;
+import com.johnwstump.incentivizer.model.user.impl.UserRecord;
 import com.johnwstump.incentivizer.rest.UserController;
-import com.johnwstump.incentivizer.model.impl.UserRecord;
 import com.johnwstump.incentivizer.services.IUserService;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -15,7 +13,6 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -103,8 +100,6 @@ class UserEndpointTests extends RESTTests {
      */
     @Test
     void testUserPostEndpoint() throws Exception {
-        Mockito.when(userService.save(Mockito.any(IUser.class))).thenReturn(mockUser1);
-
         // Create a DTO pojo from the mock user
         User user = new User(mockUser1.getName(), mockUser1.getEmail());
 
@@ -118,12 +113,7 @@ class UserEndpointTests extends RESTTests {
 
         MvcResult result = mockMvc.perform(requestBuilder).andReturn();
 
-        checkResponseCode(result, HttpStatus.CREATED);
-
-        String returnedGetPath = result.getResponse().getHeader(HttpHeaders.LOCATION);
-        String actualGetPath = PATH_IDENTIFIER + "/" + mockUser1.getId();
-
-        Assertions.assertTrue(returnedGetPath != null && returnedGetPath.endsWith(actualGetPath));
+        checkResponseCode(result, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
     /**

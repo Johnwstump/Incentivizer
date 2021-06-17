@@ -1,16 +1,14 @@
 package com.johnwstump.incentivizer.rest;
 
-import com.johnwstump.incentivizer.model.impl.User;
-import com.johnwstump.incentivizer.model.impl.UserRecord;
+import com.johnwstump.incentivizer.model.user.impl.User;
+import com.johnwstump.incentivizer.model.user.impl.UserRecord;
 import com.johnwstump.incentivizer.services.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,16 +41,7 @@ public class UserController {
 
     @PostMapping("/")
     public ResponseEntity<UserRecord> addUser(@RequestBody User user) {
-        UserRecord addedUser = userService.save(user);
-
-        if (addedUser == null) {
-            return ResponseEntity.noContent().build();
-        }
-
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path(
-                "/{userId}").buildAndExpand(addedUser.getId()).toUri();
-
-        return ResponseEntity.created(location).build();
+        return new ResponseEntity<>(HttpStatus.METHOD_NOT_ALLOWED);
     }
 
     @DeleteMapping("/{userId}")

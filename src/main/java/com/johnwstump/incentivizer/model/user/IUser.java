@@ -1,4 +1,4 @@
-package com.johnwstump.incentivizer.model;
+package com.johnwstump.incentivizer.model.user;
 
 public interface IUser {
 

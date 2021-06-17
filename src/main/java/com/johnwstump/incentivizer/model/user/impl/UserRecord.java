@@ -1,10 +1,12 @@
-package com.johnwstump.incentivizer.model.impl;
+package com.johnwstump.incentivizer.model.user.impl;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.util.Calendar;
 
 @Entity
@@ -16,6 +18,10 @@ public @Data class UserRecord extends User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @NotNull
+    @NotEmpty
+    private String encryptedPassword;
 
     @Basic
     @Temporal(TemporalType.TIMESTAMP)
