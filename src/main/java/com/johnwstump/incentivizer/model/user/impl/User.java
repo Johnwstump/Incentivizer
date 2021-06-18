@@ -1,6 +1,7 @@
 package com.johnwstump.incentivizer.model.user.impl;
 
-import com.johnwstump.incentivizer.model.email.ValidEmail;
+import com.johnwstump.incentivizer.model.email.EmailValidator;
+import com.johnwstump.incentivizer.model.email.InvalidEmailException;
 import com.johnwstump.incentivizer.model.user.IUser;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,11 +19,17 @@ public @Data class User implements IUser {
 
     @NotNull
     @NotEmpty
-    @ValidEmail
     private String email;
 
-    public User(String name, String email) {
+    public User(String name, String email) throws InvalidEmailException {
         setName(name);
         setEmail(email);
+    }
+
+    public void setEmail(String email) throws InvalidEmailException {
+        email = email.toUpperCase().trim();
+        new EmailValidator().validateEmail(email);
+
+        this.email = email;
     }
 }

@@ -1,5 +1,6 @@
 package com.johnwstump.incentivizer.rest;
 
+import com.johnwstump.incentivizer.model.email.InvalidEmailException;
 import com.johnwstump.incentivizer.model.user.impl.User;
 import com.johnwstump.incentivizer.model.user.impl.UserRecord;
 import com.johnwstump.incentivizer.services.IUserService;
@@ -55,6 +56,10 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
 
-        userService.save(userId, user);
+        try {
+            userService.save(userId, user);
+        } catch (InvalidEmailException e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        }
     }
 }

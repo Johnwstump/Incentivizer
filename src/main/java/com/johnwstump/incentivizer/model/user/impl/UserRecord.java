@@ -1,5 +1,6 @@
 package com.johnwstump.incentivizer.model.user.impl;
 
+import com.johnwstump.incentivizer.model.email.InvalidEmailException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -31,7 +32,7 @@ public @Data class UserRecord extends User {
     @Temporal(TemporalType.TIMESTAMP)
     private Calendar updated;
 
-    public UserRecord(String name, String email) {
+    public UserRecord(String name, String email) throws InvalidEmailException {
         super(name, email);
     }
 }

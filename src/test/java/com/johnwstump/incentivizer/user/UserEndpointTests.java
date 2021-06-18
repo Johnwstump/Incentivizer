@@ -2,6 +2,7 @@ package com.johnwstump.incentivizer.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.johnwstump.incentivizer.RESTTests;
+import com.johnwstump.incentivizer.model.email.InvalidEmailException;
 import com.johnwstump.incentivizer.model.user.impl.User;
 import com.johnwstump.incentivizer.model.user.impl.UserRecord;
 import com.johnwstump.incentivizer.rest.UserController;
@@ -46,6 +47,9 @@ class UserEndpointTests extends RESTTests {
 
     private UserRecord mockUser1 = new UserRecord("Norman", "testEmail@test.org");
     private UserRecord mockUser2 = new UserRecord("Archie", "anotherEmail@test.org");
+
+    UserEndpointTests() throws InvalidEmailException {
+    }
 
     /**
      * We ensure that the endpoint returns the correct User specified by the ID indicated in the path.

@@ -1,6 +1,7 @@
 package com.johnwstump.incentivizer.services.impl;
 
 import com.johnwstump.incentivizer.dao.UserRepository;
+import com.johnwstump.incentivizer.model.email.InvalidEmailException;
 import com.johnwstump.incentivizer.model.user.IUser;
 import com.johnwstump.incentivizer.model.user.impl.UserDTO;
 import com.johnwstump.incentivizer.model.user.impl.UserRecord;
@@ -28,9 +29,9 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserRecord registerNewUser(@Valid UserDTO newUser) throws UserAlreadyExistsException {
-        if (userWithNameOrEmailExists(newUser.getName(), newUser.getEmail())){
-            throw new UserAlreadyExistsException("A user already exists with that name/email address.");
+    public UserRecord registerNewUser(@Valid UserDTO newUser) throws UserAlreadyExistsException, InvalidEmailException {
+        if (userWithEmailExists(newUser.getEmail())){
+            throw new UserAlreadyExistsException("A user already exists with that email address.");
         }
 
         UserRecord record = new UserRecord();
@@ -40,8 +41,8 @@ public class UserService implements IUserService {
         return userRepository.save(record);
     }
 
-    private boolean userWithNameOrEmailExists(String email, String name){
-        List<UserRecord> usersWithSameEmail = this.userRepository.findByEmailOrName(email, name);
+    private boolean userWithEmailExists(String email){
+        List<UserRecord> usersWithSameEmail = this.userRepository.findByEmail(email);
 
         return !usersWithSameEmail.isEmpty();
     }
@@ -59,7 +60,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserRecord save(long id, IUser user) {
+    public UserRecord save(long id, IUser user) throws InvalidEmailException {
         Optional<UserRecord> possibleRecordToUpdate = findById(id);
 
         UserRecord recordToUpdate;
