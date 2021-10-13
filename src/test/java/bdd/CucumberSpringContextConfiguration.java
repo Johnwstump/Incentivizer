@@ -1,7 +1,7 @@
 package bdd;
 
 import com.johnwstump.incentivizer.IncentivizerApplication;
-import org.junit.Before;
+import cucumber.api.java.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootContextLoader;
@@ -20,7 +20,7 @@ public class CucumberSpringContextConfiguration {
     /**
      * Need this method so the cucumber will recognize this class as glue and load spring context configuration
      */
-    @Before
+    @Before()
     public void setUp() {
         LOG.info("-------------- Spring Context Initialized For Executing Cucumber Tests --------------");
     }

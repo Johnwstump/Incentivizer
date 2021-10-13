@@ -2,9 +2,10 @@ package bdd;
 
 import com.johnwstump.incentivizer.dao.UserRepository;
 import com.johnwstump.incentivizer.model.email.InvalidEmailException;
-import com.johnwstump.incentivizer.model.user.impl.UserDTO;
-import com.johnwstump.incentivizer.services.IUserService;
-import com.johnwstump.incentivizer.services.impl.UserAlreadyExistsException;
+import com.johnwstump.incentivizer.model.password.InvalidPasswordException;
+import com.johnwstump.incentivizer.model.user.impl.dto.RegistrationRequest;
+import com.johnwstump.incentivizer.services.user.IUserService;
+import com.johnwstump.incentivizer.services.user.impl.UserAlreadyExistsException;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
@@ -18,7 +19,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class UserRegistrationStepDefs extends CucumberSpringContextConfiguration{
+public class UserRegistrationStepDefs {
     @Autowired
     private IUserService userService;
     @Autowired
@@ -26,16 +27,16 @@ public class UserRegistrationStepDefs extends CucumberSpringContextConfiguration
 
     private Exception registrationResult;
 
-    @Before(value="user")
+    @Before(value = "@User")
     public void beforeUser(){
         userRepository.deleteAll();
     }
 
     @Given("I have the following users registered")
-    public void iHaveTheFollowingUsersRegistered(DataTable table) throws UserAlreadyExistsException, InvalidEmailException {
+    public void iHaveTheFollowingUsersRegistered(DataTable table) throws UserAlreadyExistsException, InvalidEmailException, InvalidPasswordException {
         List<Map<String, String>> rows = table.asMaps(String.class, String.class);
 
-        UserDTO newUser = new UserDTO();
+        RegistrationRequest newUser = new RegistrationRequest();
         for (Map<String, String> columns : rows) {
             String name = columns.get("name");
             String password = columns.get("password");
@@ -43,8 +44,8 @@ public class UserRegistrationStepDefs extends CucumberSpringContextConfiguration
 
             newUser.setName(name);
             newUser.setEmail(email);
-            newUser.setPlainPassword(password);
-            newUser.setMatchingPlainPassword(password);
+            newUser.setPassword(password);
+            newUser.setMatchingPassword(password);
 
             userService.registerNewUser(newUser);
         }
@@ -53,11 +54,11 @@ public class UserRegistrationStepDefs extends CucumberSpringContextConfiguration
     @When("I register a user with email {string}")
     public void iRegisterAUserWithEmail(String email) {
         try {
-            UserDTO newUser = new UserDTO();
+            RegistrationRequest newUser = new RegistrationRequest();
             newUser.setName("TomTest");
-            String password = "password";
-            newUser.setPlainPassword(password);
-            newUser.setMatchingPlainPassword(password);
+            String password = "Password!124";
+            newUser.setPassword(password);
+            newUser.setMatchingPassword(password);
             newUser.setEmail(email);
             userService.registerNewUser(newUser);
         }
@@ -72,16 +73,16 @@ public class UserRegistrationStepDefs extends CucumberSpringContextConfiguration
         assertThat(registrationResult).as("Exception should indicate email is invalid").isInstanceOf(InvalidEmailException.class);
     }
 
-    @And("there should (still )be (only ){int} registered user with email {string}")
-    public void thereShouldBeOnlyXRegisteredUserWithEmail(int expectedNumUsers, String emailAddress) {
+    @And("there should (still )be (only )1 registered user with email {string}")
+    public void thereShouldBeOnly1RegisteredUserWithEmail(String emailAddress) {
         emailAddress = emailAddress.toUpperCase();
-        int actualNumUsers = userRepository.findByEmail(emailAddress).size();
-        assertThat(actualNumUsers).isEqualTo(expectedNumUsers);
+        int actualNumUsers = userRepository.findByEmail(emailAddress).isPresent() ? 1 : 0;
+        assertThat(actualNumUsers).isEqualTo(1);
     }
 
     @And("there should be a registered user with email {string}")
-    public void thereShouldBeOnlyXRegisteredUserWithEmail(String emailAddress) {
-        thereShouldBeOnlyXRegisteredUserWithEmail(1, emailAddress);
+    public void thereShouldBeARegisteredUserWithEmail(String emailAddress) {
+        thereShouldBeOnly1RegisteredUserWithEmail(emailAddress);
     }
 
     @Then("I should receive an error indicating the user already exists")
@@ -90,8 +91,28 @@ public class UserRegistrationStepDefs extends CucumberSpringContextConfiguration
         assertThat(registrationResult).as("Exception should indicate user exists").isInstanceOf(UserAlreadyExistsException.class);
     }
 
+    @Then("I should receive an error indicating the password is invalid")
+    public void iShouldReceiveAnErrorIndicatingThePasswordIsInvalid() {
+        assertThat(registrationResult).as("Exception should have been thrown").isNotNull();
+        assertThat(registrationResult).as("Exception should indicate password is invalid").isInstanceOf(InvalidPasswordException.class);
+    }
+
     @Given("I register a user with email")
     public void iRegisterAUserWithLongEmail(String email) {
         iRegisterAUserWithEmail(email);
+    }
+
+    @Given("I register a user with password {string}")
+    public void iRegisterAUserWithPassword(String password) {
+        try {
+            RegistrationRequest newUser = new RegistrationRequest();
+            newUser.setName("TodTest");
+            newUser.setPassword(password);
+            newUser.setMatchingPassword(password);
+            newUser.setEmail("TestPassEmail@test.com");
+            userService.registerNewUser(newUser);
+        } catch (Exception ex) {
+            this.registrationResult = ex;
+        }
     }
 }
