@@ -1,4 +1,4 @@
-package com.johnwstump.incentivizer.services.impl;
+package com.johnwstump.incentivizer.services.user.impl;
 
 public class UserAlreadyExistsException extends Exception {
     UserAlreadyExistsException(String message){

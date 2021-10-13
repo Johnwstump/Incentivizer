@@ -1,12 +1,12 @@
 package com.johnwstump.incentivizer.model.password;
 
-import com.johnwstump.incentivizer.model.user.impl.UserDTO;
+import com.johnwstump.incentivizer.model.user.impl.dto.RegistrationRequest;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 public class PasswordMatchesValidator
-        implements ConstraintValidator<PasswordMatches, UserDTO> {
+        implements ConstraintValidator<PasswordMatches, RegistrationRequest> {
 
     @Override
     public void initialize(PasswordMatches constraintAnnotation) {
@@ -14,7 +14,7 @@ public class PasswordMatchesValidator
     }
 
     @Override
-    public boolean isValid(UserDTO newUser, ConstraintValidatorContext context){
-        return newUser.getPlainPassword().equals(newUser.getMatchingPlainPassword());
+    public boolean isValid(RegistrationRequest newUser, ConstraintValidatorContext context) {
+        return newUser.getPassword().equals(newUser.getMatchingPassword());
     }
 }

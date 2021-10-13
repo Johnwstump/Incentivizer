@@ -1,6 +1,7 @@
 package com.johnwstump.incentivizer;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
+import lombok.extern.apachecommons.CommonsLog;
 import org.hibernate.PropertyNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -15,6 +16,7 @@ import javax.sql.DataSource;
 import java.beans.PropertyVetoException;
 
 @PropertySource("application.properties")
+@CommonsLog
 @SpringBootApplication
 public class IncentivizerApplication {
 
@@ -25,7 +27,7 @@ public class IncentivizerApplication {
     }
 
     @Autowired
-    public IncentivizerApplication(Environment env){
+    public IncentivizerApplication(Environment env) {
         this.env = env;
     }
 
@@ -33,10 +35,29 @@ public class IncentivizerApplication {
     public DataSource securityDataSource() throws PropertyVetoException {
         ComboPooledDataSource securityDataSource = new ComboPooledDataSource();
 
-        securityDataSource.setDriverClass(env.getProperty("jdbc.driverClassName"));
-        securityDataSource.setJdbcUrl(env.getProperty("jdbc.url"));
-        securityDataSource.setUser(env.getProperty("jdbc.user"));
-        securityDataSource.setPassword(env.getProperty("jdbc.password"));
+        if (System.getenv("RDS_HOSTNAME") != null) {
+            try {
+                Class.forName("com.mysql.jdbc.Driver");
+                String dbName = System.getenv("RDS_DB_NAME");
+                String userName = System.getenv("RDS_USERNAME");
+                String password = System.getenv("RDS_PASSWORD");
+                String hostname = System.getenv("RDS_HOSTNAME");
+                String port = System.getenv("RDS_PORT");
+                String schemaName = System.getenv("INCENTIVIZER_SCHEMA");
+                String jdbcUrl = "jdbc:mysql://" + hostname + ":" + port + "/" + dbName + "?currentSchema=" + schemaName;
+                securityDataSource.setJdbcUrl(jdbcUrl);
+                securityDataSource.setDriverClass("com.mysql.jdbc.Driver");
+                securityDataSource.setUser(userName);
+                securityDataSource.setPassword(password);
+            } catch (ClassNotFoundException e) {
+                log.warn(e.toString());
+            }
+        } else {
+            securityDataSource.setJdbcUrl(env.getProperty("jdbc.url"));
+            securityDataSource.setDriverClass(env.getProperty("jdbc.driverClassName"));
+            securityDataSource.setUser(env.getProperty("jdbc.user"));
+            securityDataSource.setPassword(env.getProperty("jdbc.password"));
+        }
 
         securityDataSource.setInitialPoolSize(getIntProperty("connection.pool.initialPoolSize"));
         securityDataSource.setMinPoolSize(getIntProperty("connection.pool.minPoolSize"));
